@@ -24,7 +24,7 @@ const roomUsers = new Map(); // roomId => Set of socket ids
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
-
+ 
   socket.on('join-room', (roomId) => {
     socket.join(roomId);
     if (!roomUsers.has(roomId)) {
@@ -52,13 +52,19 @@ io.on('connection', (socket) => {
       }
     }
   });
+  console.log("roomUsers")
+  console.log(roomUsers)
 
   // WebRTC signaling events (broadcast to room except sender)
   socket.on('webrtc-offer', ({ roomId, offer }) => {
+    console.log("roomId, offer")
+    console.log(roomId, offer)
     socket.to(roomId).emit('webrtc-offer', { from: socket.id, offer });
   });
 
   socket.on('webrtc-answer', ({ roomId, answer }) => {
+    console.log("roomId, answer")
+    console.log(roomId, answer)
     socket.to(roomId).emit('webrtc-answer', { from: socket.id, answer });
   });
 
