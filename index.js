@@ -6,12 +6,11 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// Allow all origins for demo; restrict in production as needed
 app.use(cors());
 
 const io = new Server(server, {
   cors: {
-    origin: '*', // Allow all origins for now
+    origin: '*',
     methods: ['GET', 'POST']
   }
 });
@@ -31,9 +30,22 @@ io.on('connection', (socket) => {
   socket.on('echo', (data) => {
     socket.emit('echo', data);
   });
+
+  // WebRTC signaling events
+  socket.on("webrtc-offer", (offer) => {
+    socket.broadcast.emit("webrtc-offer", offer);
+  });
+
+  socket.on("webrtc-answer", (answer) => {
+    socket.broadcast.emit("webrtc-answer", answer);
+  });
+
+  socket.on("webrtc-ice-candidate", (candidate) => {
+    socket.broadcast.emit("webrtc-ice-candidate", candidate);
+  });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
-}); 
+});
