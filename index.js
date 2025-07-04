@@ -58,13 +58,13 @@ io.on('connection', (socket) => {
   // WebRTC signaling events (broadcast to room except sender)
   socket.on('webrtc-offer', ({ roomId, offer }) => {
     console.log("roomId, offer")
-    console.log(roomId, offer)
+    console.log(roomId)
     socket.to(roomId).emit('webrtc-offer', { from: socket.id, offer });
   });
 
   socket.on('webrtc-answer', ({ roomId, answer }) => {
     console.log("roomId, answer")
-    console.log(roomId, answer)
+    console.log(roomId)
     socket.to(roomId).emit('webrtc-answer', { from: socket.id, answer });
   });
 
