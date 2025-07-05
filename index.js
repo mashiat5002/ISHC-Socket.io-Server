@@ -56,9 +56,10 @@ io.on('connection', (socket) => {
     }
 
     meetingChats.get(roomId).push(message);
-
+    console.log("Chat messages in room:", roomId);
+    console.log(meetingChats.get(roomId));
     AllroomUsers.forEach((userId) => {
-      socket.to(userId).emit('receive-chat', { messages: meetingChats.get(roomId) });
+      socket.to(userId).emit('receive-chat', { msg: meetingChats.get(roomId) });
     });
 
   });
