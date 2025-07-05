@@ -6,7 +6,6 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// Enable CORS for all origins (you can restrict this in production)
 app.use(cors());
 
 const io = new Server(server, {
@@ -16,53 +15,32 @@ const io = new Server(server, {
   }
 });
 
-// Simple health check endpoint
 app.get('/', (req, res) => {
   res.send('Socket.io server is running!');
 });
 
-// roomId => Set of socket IDs
-const roomUsers = new Map();
+// Track users in each room
+const roomUsers = new Map(); // roomId => Set of socket ids
 
 io.on('connection', (socket) => {
-  console.log(`🔌 New connection: ${socket.id}`);
-
+  console.log('A user connected:', socket.id);
+ 
   socket.on('join-room', (roomId) => {
     socket.join(roomId);
-
-    // Add to room tracking
     if (!roomUsers.has(roomId)) {
       roomUsers.set(roomId, new Set());
     }
-
     const users = roomUsers.get(roomId);
     users.add(socket.id);
 
-    // Tell the new user who else is in the room
+    // Send room info to the joining user
     socket.emit('room-info', {
       existingUsers: [...users].filter(id => id !== socket.id)
     });
-
-    console.log(`🟢 ${socket.id} joined room ${roomId}`);
-    console.log(`Current users in room ${roomId}:`, [...users]);
-  });
-
-  socket.on('webrtc-offer', ({ roomId, offer, to }) => {
-    console.log(`📨 Offer from ${socket.id} to ${to} in room ${roomId}`);
-    io.to(to).emit('webrtc-offer', { offer, from: socket.id });
-  });
-
-  socket.on('webrtc-answer', ({ roomId, answer, to }) => {
-    console.log(`📨 Answer from ${socket.id} to ${to} in room ${roomId}`);
-    io.to(to).emit('webrtc-answer', { answer, from: socket.id });
-  });
-
-  socket.on('webrtc-ice-candidate', ({ roomId, candidate, to }) => {
-    console.log(`📨 ICE candidate from ${socket.id} to ${to}`);
-    io.to(to).emit('webrtc-ice-candidate', { candidate, from: socket.id });
   });
 
   socket.on('disconnecting', () => {
+    // Remove user from all rooms they are in
     for (const roomId of socket.rooms) {
       if (roomUsers.has(roomId)) {
         const users = roomUsers.get(roomId);
@@ -72,14 +50,31 @@ io.on('connection', (socket) => {
         }
       }
     }
+    console.log('User disconnected:', socket.id);
+  });
+ 
 
-    console.log(`🔌 Disconnected: ${socket.id}`);
-    console.log('🧾 Updated room users:', Object.fromEntries([...roomUsers].map(([k, v]) => [k, [...v]])));
+  // WebRTC signaling events (broadcast to room except sender)
+  socket.on('webrtc-offer', ({ to, from, offer }) => {
+    console.log(`WebRTC offer from ${from} to ${to}:`, offer);
+
+
+    socket.to(to).emit('webrtc-offer', { from: from, offer });
+  });
+
+  socket.on('webrtc-answer', ({ to, answer, from }) => {
+    console.log(`WebRTC answer from ${from} to ${to}:`, answer);
+
+    socket.to(to).emit('webrtc-answer', { from: from, answer });
+  });
+
+  socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
+    console.log(`WebRTC ICE candidate from ${from} to ${to}:`, candidate);
+    socket.to(to).emit('webrtc-ice-candidate', { from: from, candidate });
   });
 });
 
-// Start the server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 Socket.io server is running on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
