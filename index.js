@@ -66,11 +66,13 @@ io.on('connection', (socket) => {
   socket.on('webrtc-offer', ({ roomId, offer }) => {
     
     socket.to(roomId).emit('webrtc-offer', { from: socket.id, offer });
+    console.log(`Received WebRTC offer from ${socket.id} for room ${roomId}`);
   });
 
   socket.on('webrtc-answer', ({ roomId, answer }) => {
-   
+    
     socket.to(roomId).emit('webrtc-answer', { from: socket.id, answer });
+    console.log(`Received WebRTC answer from ${socket.id} for room ${roomId}`);
   });
 
   socket.on('webrtc-ice-candidate', ({ roomId, candidate }) => {
