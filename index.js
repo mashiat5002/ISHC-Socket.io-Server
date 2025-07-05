@@ -55,6 +55,7 @@ io.on('connection', (socket) => {
   });
  
     socket.on("send-chat", ({msg , roomId }) => {
+      console.log("Received chat message:", msg, "in room:", roomId);
     const { name, message } = msg;
     console.log(`Received chat message in room ${roomId}:`, name, message);
     const senderId = socket.id;
