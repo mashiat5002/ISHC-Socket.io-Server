@@ -38,6 +38,11 @@ io.on('connection', (socket) => {
       isOfferer: users.size === 1,
       existingUsers: [...users].filter(id => id !== socket.id)
     });
+
+
+
+     console.log(`After joining room ${roomId}:`);
+  console.log(Object.fromEntries([...roomUsers].map(([k, v]) => [k, [...v]])));
   });
 
   socket.on('disconnecting', () => {
@@ -51,20 +56,20 @@ io.on('connection', (socket) => {
         }
       }
     }
+
+    console.log(`After disconnecting user ${socket.id}:`);
+  console.log(Object.fromEntries([...roomUsers].map(([k, v]) => [k, [...v]])));
   });
-  console.log("roomUsers")
-  console.log(roomUsers)
+
 
   // WebRTC signaling events (broadcast to room except sender)
   socket.on('webrtc-offer', ({ roomId, offer }) => {
-    console.log("roomId, offer")
-    console.log(roomId)
+    
     socket.to(roomId).emit('webrtc-offer', { from: socket.id, offer });
   });
 
   socket.on('webrtc-answer', ({ roomId, answer }) => {
-    console.log("roomId, answer")
-    console.log(roomId)
+   
     socket.to(roomId).emit('webrtc-answer', { from: socket.id, answer });
   });
 
