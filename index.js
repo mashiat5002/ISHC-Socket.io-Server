@@ -2,9 +2,13 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const { default: addMessage } = require('./addMessage');
 
 const app = express();
 const server = http.createServer(app);
+
+
+
 
 app.use(cors());
 
@@ -21,6 +25,8 @@ app.get('/', (req, res) => {
 
 // Track users in each room
 const roomUsers = new Map(); // roomId => Set of socket ids
+const meetingChats = new Map(); // roomId => Array of chat messages
+
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -38,6 +44,23 @@ io.on('connection', (socket) => {
       existingUsers: [...users].filter(id => id !== socket.id)
     });
   });
+
+  socket.on("send-chat", ({message , roomId }) => {
+    const senderId = socket.id;
+    const AllroomUsers = roomUsers.get(roomId) || new Set();
+
+    AllroomUsers.forEach((userId) => { 
+      socket.to(userId).emit('receive-chat', { message });
+    });
+
+  });
+
+    
+  });
+
+
+
+
 
   socket.on('disconnecting', () => {
     // Remove user from all rooms they are in
@@ -72,7 +95,7 @@ io.on('connection', (socket) => {
     console.log(`WebRTC ICE candidate from ${from} to ${to}:`, candidate);
     socket.to(to).emit('webrtc-ice-candidate', { from: from, candidate });
   });
-});
+
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
