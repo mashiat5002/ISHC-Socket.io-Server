@@ -2,7 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const { default: addMessage } = require('./addMessage');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -49,8 +49,14 @@ io.on('connection', (socket) => {
     const senderId = socket.id;
     const AllroomUsers = roomUsers.get(roomId) || new Set();
 
-    AllroomUsers.forEach((userId) => { 
-      socket.to(userId).emit('receive-chat', { message });
+    if (!meetingChats.has(roomId)) {
+      meetingChats.set(roomId, []);
+    }
+
+    meetingChats.get(roomId).push(message);
+
+    AllroomUsers.forEach((userId) => {
+      socket.to(userId).emit('receive-chat', { messages: meetingChats.get(roomId) });
     });
 
   });
