@@ -46,6 +46,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on("send-chat", ({message , roomId }) => {
+    console.log(`Received chat message in room ${roomId}:`, message);
     const senderId = socket.id;
     const AllroomUsers = roomUsers.get(roomId) || new Set();
 
@@ -78,24 +79,24 @@ io.on('connection', (socket) => {
 
   // WebRTC signaling events (broadcast to room except sender)
   socket.on('webrtc-offer', ({ to, from, offer }) => {
-    console.log(`WebRTC offer from ${from} to ${to}:`, offer);
+    // console.log(`WebRTC offer from ${from} to ${to}:`, offer);
 
 
     socket.to(to).emit('webrtc-offer', { from: from, offer });
   });
 
   socket.on('webrtc-answer', ({ to, answer, from }) => {
-    console.log(`WebRTC answer from ${from} to ${to}:`, answer);
+    // console.log(`WebRTC answer from ${from} to ${to}:`, answer);
 
     socket.to(to).emit('webrtc-answer', { from: from, answer });
   });
 
   socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
-    console.log(`WebRTC ICE candidate from ${from} to ${to}:`, candidate);
+    // console.log(`WebRTC ICE candidate from ${from} to ${to}:`, candidate);
     socket.to(to).emit('webrtc-ice-candidate', { from: from, candidate });
   });
 
-  
+
     
   });
 
