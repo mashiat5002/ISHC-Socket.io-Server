@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
 // Track users in each room
 const roomUsers = new Map(); // roomId => Set of socket ids
 
-
+const meetingChats = new Map(); // roomId => Array of chat messages
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
  
@@ -54,6 +54,29 @@ io.on('connection', (socket) => {
     console.log('User disconnected:', socket.id);
   });
  
+    socket.on("send-chat", ({msg , roomId }) => {
+    const { name, message } = msg;
+    console.log(`Received chat message in room ${roomId}:`, name, message);
+    const senderId = socket.id;
+    const AllroomUsers = roomUsers.get(roomId) || new Set();
+
+    if (!meetingChats.has(roomId)) {
+      meetingChats.set(roomId, []);
+    }
+
+    meetingChats.get(roomId).push(msg);
+    console.log("Chat messages in room:", roomId);
+    console.log(meetingChats.get(roomId));
+    AllroomUsers.forEach((userId) => {
+      socket.to(userId).emit('receive-chat', { msg: meetingChats.get(roomId) });
+    });
+
+  });
+
+
+
+
+
 
   // WebRTC signaling events (broadcast to room except sender)
   socket.on('webrtc-offer', ({ to, from, offer }) => {
