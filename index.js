@@ -34,9 +34,13 @@ io.on('connection', (socket) => {
     const users = roomUsers.get(roomId);
     users.add(socket.id);
 
+
+    
+
     // Send room info to the joining user
     socket.emit('room-info', {
-      existingUsers: [...users].filter(id => id !== socket.id)
+      existingUsers: [...users],
+      existingChats: meetingChats.get(roomId) || []
     });
   });
 
