@@ -55,7 +55,7 @@ io.on('connection', (socket) => {
       meetingChats.set(roomId, []);
     }
 
-    meetingChats.get(roomId).push(message);
+    meetingChats.get(roomId).push(msg);
     console.log("Chat messages in room:", roomId);
     console.log(meetingChats.get(roomId));
     AllroomUsers.forEach((userId) => {
