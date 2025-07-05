@@ -45,9 +45,9 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on("send-chat", ({msg , roomId }) => {
-    const { name, message } = msg;
-    console.log(`Received chat message in room ${roomId}:`, name, message);
+  socket.on("send-chat", ({message , roomId }) => {
+    const { name, text } = message;
+    console.log(`Received chat message in room ${roomId}:`, name, text);
     const senderId = socket.id;
     const AllroomUsers = roomUsers.get(roomId) || new Set();
 
@@ -55,11 +55,10 @@ io.on('connection', (socket) => {
       meetingChats.set(roomId, []);
     }
 
-    meetingChats.get(roomId).push(msg);
-    console.log("Chat messages in room:", roomId);
-    console.log(meetingChats.get(roomId));
+    meetingChats.get(roomId).push(message);
+
     AllroomUsers.forEach((userId) => {
-      socket.to(userId).emit('receive-chat', { msg: meetingChats.get(roomId) });
+      socket.to(userId).emit('receive-chat', { messages: meetingChats.get(roomId) });
     });
 
   });
