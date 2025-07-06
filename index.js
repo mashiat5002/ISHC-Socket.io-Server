@@ -34,8 +34,9 @@ io.on('connection', (socket) => {
     const users = roomUsers.get(roomId);
     users.add(socket.id);
 
-
-    
+    socket.emit("send-previous-chats", {
+      existingChats: meetingChats.get(roomId) || []
+    });
 
     // Send room info to the joining user
     socket.to(roomId).emit('room-info', {
