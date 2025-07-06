@@ -47,6 +47,9 @@ io.on('connection', (socket) => {
       existingUsers: [...users],
       existingChats: meetingChats.get(roomId) || []
     });
+
+    // Notify all other users in the room that a new user has joined
+    socket.to(roomId).emit('user-joined', { userId: socket.id });
   });
 
   socket.on('disconnecting', () => {
