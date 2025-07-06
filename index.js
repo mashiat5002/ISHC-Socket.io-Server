@@ -62,24 +62,22 @@ io.on('connection', (socket) => {
   });
 
 // ok
-  socket.on('disconnecting', () => {
-
-   
-    // Remove user from all rooms they are in
-    for (const roomId of socket.rooms) {
-      if (roomUsers.has(roomId)) {
-        const users = roomUsers.get(roomId);
-        users.delete(socket.id);
-        if (users.size === 0) {
-          roomUsers.delete(roomId);
-        }
+socket.on('disconnecting', () => {
+  for (const roomId of socket.rooms) {
+    if (roomUsers.has(roomId)) {
+      const users = roomUsers.get(roomId);
+      users.delete(socket.id);
+      if (users.size === 0) {
+        roomUsers.delete(roomId);
       }
     }
-     socket.to(roomId).emit('user-disconnected', {
+    // Emit user-disconnected to all other users in this room
+    socket.to(roomId).emit('user-disconnected', {
       userId: socket.id,
     });
-    console.log('User disconnected:', socket.id);
-  });
+  }
+  console.log('User disconnected:', socket.id);
+});
  
     socket.on("send-chat", ({msg , roomId }) => {
       // console.log("Received chat message:", msg, "in room:", roomId);
