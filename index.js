@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
     users.add(socket.id);
 
     socket.emit("send-previous-chats", {
-      existingChats: meetingChats.get(roomId) || []
+      msg: meetingChats.get(roomId) || []
     });
 
     // Send room info to the joining user
