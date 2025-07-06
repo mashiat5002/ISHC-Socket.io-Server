@@ -3,10 +3,13 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 
+
 const app = express();
 const server = http.createServer(app);
 
+
 app.use(cors());
+
 
 const io = new Server(server, {
   cors: {
@@ -15,12 +18,15 @@ const io = new Server(server, {
   }
 });
 
+
 app.get('/', (req, res) => {
   res.send('Socket.io server is running!');
 });
 
+
 // Track users in each room
 const roomUsers = new Map(); // roomId => Set of socket ids
+
 
 const meetingChats = new Map(); // roomId => Array of chat messages
 io.on('connection', (socket) => {
@@ -34,9 +40,11 @@ io.on('connection', (socket) => {
     const users = roomUsers.get(roomId);
     users.add(socket.id);
 
+
     socket.emit("send-previous-chats", {
       msg: meetingChats.get(roomId) || []
     });
+
 
     // Send room info to the joining user
     socket.emit('room-info', {
@@ -47,10 +55,8 @@ io.on('connection', (socket) => {
       existingUsers: [...users],
       existingChats: meetingChats.get(roomId) || []
     });
-
-    // Notify all other users in the room that a new user has joined
-    socket.to(roomId).emit('user-joined', { userId: socket.id });
   });
+
 
   socket.on('disconnecting', () => {
     // Remove user from all rooms they are in
@@ -73,9 +79,11 @@ io.on('connection', (socket) => {
     const senderId = socket.id;
     const AllroomUsers = roomUsers.get(roomId) || new Set();
 
+
     if (!meetingChats.has(roomId)) {
       meetingChats.set(roomId, []);
     }
+
 
     meetingChats.get(roomId).push(msg);
     console.log("Chat messages in room:", roomId);
@@ -84,7 +92,14 @@ io.on('connection', (socket) => {
       socket.to(userId).emit('receive-chat', { msg: msg });
     });
 
+
   });
+
+
+
+
+
+
 
 
 
@@ -96,14 +111,19 @@ io.on('connection', (socket) => {
     console.log(`WebRTC offer from ${from} to ${to}:`, offer);
 
 
+
+
     socket.to(to).emit('webrtc-offer', { from: from, offer });
   });
+
 
   socket.on('webrtc-answer', ({ to, answer, from }) => {
     console.log(`WebRTC answer from ${from} to ${to}:`, answer);
 
+
     socket.to(to).emit('webrtc-answer', { from: from, answer });
   });
+
 
   socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
     console.log(`WebRTC ICE candidate from ${from} to ${to}:`, candidate);
@@ -111,7 +131,10 @@ io.on('connection', (socket) => {
   });
 });
 
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+
