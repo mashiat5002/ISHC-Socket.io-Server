@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
     
 
     // Send room info to the joining user
-    io.to(roomId).emit('room-info', {
+    socket.to(roomId).emit('room-info', {
       existingUsers: [...users],
       existingChats: meetingChats.get(roomId) || []
     });
