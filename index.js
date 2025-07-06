@@ -75,7 +75,7 @@ io.on('connection', (socket) => {
         }
       }
     }
-     socket.emit('user-disconnected', {
+     socket.to(roomId).emit('user-disconnected', {
       userId: socket.id,
     });
     console.log('User disconnected:', socket.id);
