@@ -48,13 +48,16 @@ io.on('connection', (socket) => {
   users: [...users].filter(userId => userId !== socket.id)
 });
 
-
-
-    // Send room info to the joining user
-    socket.emit('room-info', {
+ setTimeout(() => {
+  socket.emit('room-info', {
       existingUsers: [...users],
       existingChats: meetingChats.get(roomId) || []
     });
+  
+ }, 3000);
+
+    // Send room info to the joining user
+    
     
   });
 
