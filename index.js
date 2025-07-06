@@ -43,10 +43,9 @@ io.on('connection', (socket) => {
       existingUsers: [...users],
       existingChats: meetingChats.get(roomId) || []
     });
-    socket.to(roomId).emit('room-info2', {
+    socket.to(roomId).emit('room-info', {
       existingUsers: [...users],
-      existingChats: meetingChats.get(roomId) || [],
-      id: socket.id
+      existingChats: meetingChats.get(roomId) || []
     });
   });
 
