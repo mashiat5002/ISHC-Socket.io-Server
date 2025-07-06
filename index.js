@@ -44,6 +44,9 @@ io.on('connection', (socket) => {
     socket.emit("send-previous-chats", {
       msg: meetingChats.get(roomId) || []
     });
+    socket.to(roomId).emit("update-elementsRef-for-users", {
+      users: users.filter(userId => userId !== socket.id)
+    });
 
 
     // Send room info to the joining user
