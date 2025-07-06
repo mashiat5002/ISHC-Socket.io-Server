@@ -61,8 +61,10 @@ io.on('connection', (socket) => {
     
   });
 
-
+// ok
   socket.on('disconnecting', () => {
+
+   
     // Remove user from all rooms they are in
     for (const roomId of socket.rooms) {
       if (roomUsers.has(roomId)) {
@@ -73,6 +75,9 @@ io.on('connection', (socket) => {
         }
       }
     }
+     socket.emit('user-disconnected', {
+      userId: socket.id,
+    });
     console.log('User disconnected:', socket.id);
   });
  
