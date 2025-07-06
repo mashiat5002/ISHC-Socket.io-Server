@@ -43,6 +43,10 @@ io.on('connection', (socket) => {
       existingUsers: [...users],
       existingChats: meetingChats.get(roomId) || []
     });
+    socket.to(roomId).emit('room-info', {
+      existingUsers: [...users],
+      existingChats: meetingChats.get(roomId) || []
+    });
   });
 
   socket.on('disconnecting', () => {
