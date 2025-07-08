@@ -25,6 +25,7 @@ app.get('/', (req, res) => {
 
 
 app.post("/emit", (req, res) => {
+  console.log("Received emit request:", req.body);
   const { roomId, detailed_Message } = req.body;
   io.to(roomId).emit("receive-chat", { msg: detailed_Message });
   res.status(200).json({ ok: true });
