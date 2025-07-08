@@ -64,10 +64,11 @@ const userStore = {};
 
 
 const meetingChats = new Map(); // roomId => Array of chat messages
-io.on('connection', (socket) => {
+io.on('connection', (socket) => {  
   console.log('A user connected:', socket.id);
  
   socket.on('join-room', (roomId) => {
+    console.log(userStore, "User store before joining room:", userStore);
     socket.join(roomId);
     if (!roomUsers.has(roomId)) {
       roomUsers.set(roomId, new Set());
