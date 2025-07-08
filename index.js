@@ -29,7 +29,15 @@ app.get('/', (req, res) => {
 app.post("/emit", (req, res) => {
   console.log("Received emit request:", req.body);
   const { roomId, detailed_Message } = req.body;
-  io.to(roomId).emit("receive-chat", { msg: detailed_Message });
+
+
+   if (!meetingChats.has(roomId)) {
+      meetingChats.set(roomId, []);
+    }
+
+
+    meetingChats.get(roomId).push(detailed_Message);
+    io.to(roomId).emit("receive-chat", { msg: detailed_Message });
   res.status(200).json({ ok: true });
 });
 
@@ -90,11 +98,8 @@ socket.on('disconnecting', () => {
 });
  
     socket.on("send-chat", ({msg , roomId }) => {
-      // console.log("Received chat message:", msg, "in room:", roomId);
-    const { name, message } = msg;
-    // console.log(`Received chat message in room ${roomId}:`, name, message);
-    const senderId = socket.id;
-    const AllroomUsers = roomUsers.get(roomId) || new Set();
+    
+    
 
 
     if (!meetingChats.has(roomId)) {
