@@ -111,6 +111,7 @@ socket.on('disconnecting', () => {
       userId: socket.id,
     });
   }
+  delete userStore[socket.id];
   console.log('User disconnected:', socket.id);
 });
  
