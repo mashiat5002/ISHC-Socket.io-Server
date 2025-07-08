@@ -13,6 +13,8 @@ app.use(express.json());
 
 
 
+
+
 const io = new Server(server, {
   cors: {
     origin: '*',
@@ -42,8 +44,23 @@ app.post("/emit", (req, res) => {
 });
 
 
+
+
+app.post("/join", (req, res) => {
+  console.log("Received join request:", req.body);
+  const { roomId, user_name ,socketId } = req.body;
+
+  userStore[socketId] = { name: user_name,  roomId: roomId };
+  console.log("User store:", userStore);
+
+
+  res.status(200).json({ ok: true });
+});
+
+
 // Track users in each room
 const roomUsers = new Map(); // roomId => Set of socket ids
+const userStore = {};
 
 
 const meetingChats = new Map(); // roomId => Array of chat messages
@@ -97,25 +114,25 @@ socket.on('disconnecting', () => {
   console.log('User disconnected:', socket.id);
 });
  
-    socket.on("send-chat", ({msg , roomId }) => {
+  //   socket.on("send-chat", ({msg , roomId }) => {
     
     
 
 
-    if (!meetingChats.has(roomId)) {
-      meetingChats.set(roomId, []);
-    }
+  //   if (!meetingChats.has(roomId)) {
+  //     meetingChats.set(roomId, []);
+  //   }
 
 
-    meetingChats.get(roomId).push(msg);
-    // console.log("Chat messages in room:", roomId);
-    // console.log(meetingChats.get(roomId));
-    AllroomUsers.forEach((userId) => {
-      socket.to(userId).emit('receive-chat', { msg: msg });
-    });
+  //   meetingChats.get(roomId).push(msg);
+  //   // console.log("Chat messages in room:", roomId);
+  //   // console.log(meetingChats.get(roomId));
+  //   AllroomUsers.forEach((userId) => {
+  //     socket.to(userId).emit('receive-chat', { msg: msg });
+  //   });
 
 
-  });
+  // });
 
 
 
