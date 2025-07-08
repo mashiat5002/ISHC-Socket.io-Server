@@ -24,6 +24,13 @@ app.get('/', (req, res) => {
 });
 
 
+app.post("/emit", (req, res) => {
+  const { roomId, detailed_Message } = req.body;
+  io.to(roomId).emit("receive-chat", { msg: detailed_Message });
+  res.status(200).json({ ok: true });
+});
+
+
 // Track users in each room
 const roomUsers = new Map(); // roomId => Set of socket ids
 
