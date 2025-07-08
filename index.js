@@ -80,8 +80,15 @@ io.on('connection', (socket) => {
     socket.emit("send-previous-chats", {
       msg: meetingChats.get(roomId) || []
     });
+
+
    socket.to(roomId).emit("update-elementsRef-for-users", {
   users: [...users].filter(userId => userId !== socket.id)
+});
+
+
+   socket.to(roomId).emit("add-new-userDetails", {
+  updatedUserDetails: userStore
 });
 
 
