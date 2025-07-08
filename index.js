@@ -86,7 +86,7 @@ io.on('connection', (socket) => {
 
   socket.emit('room-info', {
       existingUsers: [...users],
-      existingChats: meetingChats.get(roomId) || []
+      existingUserDetails: userStore
     });
   
 
