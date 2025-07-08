@@ -82,7 +82,11 @@ io.on('connection', (socket) => {
     });
 
 
+
+
+
    socket.to(roomId).emit("update-elementsRef-for-users", {
+    
   users: [...users].filter(userId => userId !== socket.id)
 });
 
