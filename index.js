@@ -100,6 +100,7 @@ io.on('connection', (socket) => {
 
 
    socket.to(roomId).emit("add-new-userDetails", {
+    existingUsers: [...users],
   updatedUserDetails: userStore
 });
 
