@@ -58,6 +58,7 @@ app.post("/join", (req, res) => {
 });
 
 
+
 // Track users in each room
 const roomUsers = new Map(); // roomId => Set of socket ids
 const userStore = {};
@@ -82,11 +83,18 @@ io.on('connection', (socket) => {
     });
 
 
+    socket.on("send-notes", (msg)=>{
+      console.log("send notes called")
+      io.emit("receive-notes",msg)
+
+    });
+
+
 
 
 
    socket.to(roomId).emit("update-elementsRef-for-users", {
-    
+
   users: [...users].filter(userId => userId !== socket.id)
 });
 
