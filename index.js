@@ -126,6 +126,13 @@ io.on('connection', (socket) => {
 
 // ok
 socket.on('disconnecting', () => {
+
+  // Emit user-disconnected to all other users in this room
+    socket.to(roomId).emit('user-disconnected', {
+      userId: socket.id,
+    });
+
+    
   for (const roomId of socket.rooms) {
     if (roomUsers.has(roomId)) {
       const users = roomUsers.get(roomId);
@@ -134,10 +141,7 @@ socket.on('disconnecting', () => {
         roomUsers.delete(roomId);
       }
     }
-    // Emit user-disconnected to all other users in this room
-    socket.to(roomId).emit('user-disconnected', {
-      userId: socket.id,
-    });
+    
   }
   delete userStore[socket.id];
   console.log('User disconnected:', socket.id);
