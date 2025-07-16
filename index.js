@@ -131,6 +131,7 @@ socket.on('disconnecting', () => {
     if (roomId !== socket.id) { // Exclude the socket’s own room
       socket.to(roomId).emit('user-disconnected', {
         userId: socket.id,
+        name: userStore[socket.id]?.name || 'Unknown user'
       });
 
       if (roomUsers.has(roomId)) {
