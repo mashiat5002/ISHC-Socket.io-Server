@@ -126,26 +126,27 @@ io.on('connection', (socket) => {
 
 // ok
 socket.on('disconnecting', () => {
-
-  // Emit user-disconnected to all other users in this room
-    socket.to(roomId).emit('user-disconnected', {
-      userId: socket.id,
-    });
-
-    
+  // Notify each room that this user is leaving
   for (const roomId of socket.rooms) {
-    if (roomUsers.has(roomId)) {
-      const users = roomUsers.get(roomId);
-      users.delete(socket.id);
-      if (users.size === 0) {
-        roomUsers.delete(roomId);
+    if (roomId !== socket.id) { // Exclude the socket’s own room
+      socket.to(roomId).emit('user-disconnected', {
+        userId: socket.id,
+      });
+
+      if (roomUsers.has(roomId)) {
+        const users = roomUsers.get(roomId);
+        users.delete(socket.id);
+        if (users.size === 0) {
+          roomUsers.delete(roomId);
+        }
       }
     }
-    
   }
+
   delete userStore[socket.id];
   console.log('User disconnected:', socket.id);
 });
+
  
   //   socket.on("send-chat", ({msg , roomId }) => {
     
