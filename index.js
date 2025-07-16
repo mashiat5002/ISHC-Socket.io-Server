@@ -67,7 +67,13 @@ const userStore = {};
 const meetingChats = new Map(); // roomId => Array of chat messages
 io.on('connection', (socket) => {  
   console.log('A user connected:', socket.id);
- 
+
+
+ socket.to(roomId).emit('new-comer', {
+      new_comer: socket.id,
+    });
+
+
   socket.on('join-room', (roomId) => {
     console.log(userStore, "User store before joining room:", userStore);
     socket.join(roomId);
