@@ -69,9 +69,9 @@ io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
 
- socket.to(roomId).emit('new-comer', {
-      new_comer: socket.id,
-    });
+//  socket.to(roomId).emit('new-comer', {
+//       new_comer: socket.id,
+//     });
 
 
   socket.on('join-room', (roomId) => {
@@ -107,7 +107,8 @@ io.on('connection', (socket) => {
 
    socket.to(roomId).emit("add-new-userDetails", {
     existingUsers: [...users],
-  updatedUserDetails: userStore
+  updatedUserDetails: userStore,
+  new_userId:socket.id
 });
 
 
