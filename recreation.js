@@ -27,15 +27,26 @@ function addParticipant(roomId, participantId, fullName, socketId){
         rooms.set(roomId, Participants);
         
     }
-
-}
-function removeParticipant(roomId, participantId){
-    const Participants= rooms.get(roomId);
-    console.log(Participants)
-    if(Participants.has(participantId)){
-        Participants.delete(participantId);
-        rooms.set(roomId, Participants);
+    else{
+        // Update socketId if participant already exists
+        const user = allUsers.get(participantId);
+        user.socketId = socketId;
+        allUsers.set(participantId, user);
     }
+}
+function removeParticipant(socketId){
+    for (const [roomId, participants] of rooms.entries()) {
+        for (const participantId of participants) {
+            const user = allUsers.get(participantId);
+            if (user && user.socketId === socketId) {
+                participants.delete(participantId); // Remove participant from the room
+                allUsers.delete(participantId); // Remove participant from allUsers map
+                rooms.set(roomId, participants); // Update the room with the modified participants set
+                return; // Exit after removing the participant
+            }
+        }
+    }
+    
 }
 
 function handleAudioParticipant(participantId){
