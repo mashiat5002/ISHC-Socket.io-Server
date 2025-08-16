@@ -57,8 +57,8 @@ io.on('connection', (socket) => {
 socket.on('disconnecting', (socket) => {
   removeParticipant(socket.id)
   // Notify each room that this user is leaving
-      socket.to(roomId).emit('user-disconnected', {
-      });
+      // socket.to(roomId).emit('user-disconnected', {
+      // });
 });
 
  
