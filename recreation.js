@@ -33,6 +33,8 @@ function addParticipant(roomId, participantId, fullName, socketId){
         user.socketId = socketId;
         allUsers.set(participantId, user);
     }
+        console.log("rooms:", (rooms));
+    console.log("allUsers:", (allUsers));
 }
 function removeParticipant(socketId){
     for (const [roomId, participants] of rooms.entries()) {
@@ -46,6 +48,8 @@ function removeParticipant(socketId){
             }
         }
     }
+        console.log("rooms:", (rooms));
+    console.log("allUsers:", (allUsers));
     
 }
 
