@@ -58,4 +58,11 @@ function handleVideoParticipant(participantId){
 
 
 
-exports.module={ createRoom, endRoom, addParticipant, removeParticipant, handleAudioParticipant, handleVideoParticipant };
+module.exports = {
+  createRoom,
+  endRoom,
+  addParticipant,
+  removeParticipant,
+  handleAudioParticipant,
+  handleVideoParticipant
+};
