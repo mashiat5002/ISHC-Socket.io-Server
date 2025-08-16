@@ -1,4 +1,3 @@
-const  getParticipantsForSeminar= require('./isRegisteredParticipant.js');
 const rooms = new Map();
 const allUsers = new Map();
 function createRoom(roomId){
@@ -28,8 +27,7 @@ function addParticipant(roomId, participantId, fullName, socketId){
         rooms.set(roomId, Participants);
         
     }
-    console.log("rooms:", (rooms));
-    console.log("allUsers:", (allUsers));
+
 }
 function removeParticipant(roomId, participantId){
     const Participants= rooms.get(roomId);

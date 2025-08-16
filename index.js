@@ -1,5 +1,5 @@
 const { encrypt, decrypt } = require('./jwt_encrypt_decrypt.js');
-const {addParticipant}= require('./recreation.js');
+const {addParticipant, removeParticipant}= require('./recreation.js');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -34,13 +34,9 @@ app.get('/', (req, res) => {
 app.post("/emit", (req, res) => {
   console.log("Received emit request:", req.body);
   const { roomId, detailed_Message } = req.body;
-
-
    if (!meetingChats.has(roomId)) {
       meetingChats.set(roomId, []);
     }
-
-
     meetingChats.get(roomId).push(detailed_Message);
     io.to(roomId).emit("receive-chat", { msg: detailed_Message });
   res.status(200).json({ ok: true });
@@ -48,34 +44,22 @@ app.post("/emit", (req, res) => {
 
 
 
-
-
-
 const meetingChats = new Map(); // roomId => Array of chat messages
 io.on('connection', (socket) => {  
   console.log('A user connected:', socket.id);
-
   socket.on('join-room', async(token) => {
-
-    console.log("token:", token);
     const decryptedData= await decrypt(token);
-    console.log("decryptedData:", decryptedData);
     const { meeting_id, id, full_name} = decryptedData;
     addParticipant(meeting_id, id, full_name, socket.id);
   });
 
-// ok
-// socket.on('disconnecting', () => {
-//   // Notify each room that this user is leaving
 
-  
-//       socket.to(roomId).emit('user-disconnected', {
-     
-//       });
-
-    
-  
-// });
+socket.on('disconnecting', () => {
+  removeParticipant()
+  // Notify each room that this user is leaving
+      socket.to(roomId).emit('user-disconnected', {
+      });
+});
 
  
 
@@ -91,18 +75,12 @@ io.on('connection', (socket) => {
   // WebRTC signaling events (broadcast to room except sender)
   socket.on('webrtc-offer', ({ to, from, offer }) => {
     console.log(`WebRTC offer from ${from} to ${to}:`);
-
-
-
-
     socket.to(to).emit('webrtc-offer', { from: from, offer });
   });
 
 
   socket.on('webrtc-answer', ({ to, answer, from }) => {
     console.log(`WebRTC answer from ${from} to ${to}:`);
-
-
     socket.to(to).emit('webrtc-answer', { from: from, answer });
   });
 
