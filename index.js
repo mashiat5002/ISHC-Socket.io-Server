@@ -55,10 +55,10 @@ const meetingChats = new Map(); // roomId => Array of chat messages
 io.on('connection', (socket) => {  
   console.log('A user connected:', socket.id);
 
-  socket.on('join-room', (token) => {
+  socket.on('join-room', async(token) => {
 
     console.log("token:", token);
-    const decryptedData= decrypt(token);
+    const decryptedData= await decrypt(token);
     console.log("decryptedData:", decryptedData);
     // const { roomId, participantId, fullName, socketId } = token;
     // addParticipant(roomId, participantId, fullName, socketId);
