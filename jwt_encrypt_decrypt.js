@@ -1,4 +1,4 @@
-import {jwtVerify, SignJWT} from 'jose';
+const {jwtVerify, SignJWT} = require('jose');
 const key="secret";
 const secret_key= new TextEncoder().encode(key);
  const encrypt= (payload)=>{
