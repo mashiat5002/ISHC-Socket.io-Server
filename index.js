@@ -1,8 +1,10 @@
+const { encrypt, decrypt } = require('./jwt_encrypt_decrypt.js');
 const {addParticipant}= require('./recreation.js');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const { decrypt } = require('dotenv');
 
 
 const app = express();
@@ -53,9 +55,13 @@ const meetingChats = new Map(); // roomId => Array of chat messages
 io.on('connection', (socket) => {  
   console.log('A user connected:', socket.id);
 
-  socket.on('join-room', (roomId, participantId, fullName, socketId) => {
+  socket.on('join-room', (token) => {
+
+    console.log("token:", token);
+    const decryptedData= decrypt(token);
+    console.log("decryptedData:", decryptedData);
+    // const { roomId, participantId, fullName, socketId } = token;
     addParticipant(roomId, participantId, fullName, socketId);
-    console.log("User joined room:", roomId, "Participant ID:", participantId, "Full Name:", fullName, "Socket ID:", socketId);
   });
 
 // ok
