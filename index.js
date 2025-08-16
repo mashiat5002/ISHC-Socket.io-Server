@@ -4,7 +4,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const { decrypt } = require('dotenv');
+
 
 
 const app = express();
@@ -61,21 +61,21 @@ io.on('connection', (socket) => {
     const decryptedData= decrypt(token);
     console.log("decryptedData:", decryptedData);
     // const { roomId, participantId, fullName, socketId } = token;
-    addParticipant(roomId, participantId, fullName, socketId);
+    // addParticipant(roomId, participantId, fullName, socketId);
   });
 
 // ok
-socket.on('disconnecting', () => {
-  // Notify each room that this user is leaving
+// socket.on('disconnecting', () => {
+//   // Notify each room that this user is leaving
 
   
-      socket.to(roomId).emit('user-disconnected', {
+//       socket.to(roomId).emit('user-disconnected', {
      
-      });
+//       });
 
     
   
-});
+// });
 
  
 
