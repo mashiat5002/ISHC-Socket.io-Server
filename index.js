@@ -1,3 +1,4 @@
+const {addParticipant}= require('./recreation.js');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -46,130 +47,31 @@ app.post("/emit", (req, res) => {
 
 
 
-app.post("/join", (req, res) => {
-  console.log("Received join request:", req.body);
-  const { roomId, user_name ,socketId } = req.body;
-
-  userStore[socketId] = { name: user_name,  roomId: roomId };
-  console.log("User store:", userStore);
-
-
-  res.status(200).json({ ok: true });
-});
-
-
-
-// Track users in each room
-const roomUsers = new Map(); // roomId => Set of socket ids
-const userStore = {};
 
 
 const meetingChats = new Map(); // roomId => Array of chat messages
 io.on('connection', (socket) => {  
   console.log('A user connected:', socket.id);
 
-
-//  socket.to(roomId).emit('new-comer', {
-//       new_comer: socket.id,
-//     });
-
-
-  socket.on('join-room', (roomId) => {
-    console.log(userStore, "User store before joining room:", userStore);
-    socket.join(roomId);
-    if (!roomUsers.has(roomId)) {
-      roomUsers.set(roomId, new Set());
-    }
-    const users = roomUsers.get(roomId);
-    users.add(socket.id);
-
-
-    socket.emit("send-previous-chats", {
-      msg: meetingChats.get(roomId) || []
-    });
-
-
-    socket.on("send-notes", (msg)=>{
-      console.log("send notes called")
-      io.emit("receive-notes",msg)
-
-    });
-
-
-
-
-
-   socket.to(roomId).emit("update-elementsRef-for-users", {
-
-  users: [...users].filter(userId => userId !== socket.id)
-});
-
-
-   socket.to(roomId).emit("add-new-userDetails", {
-    existingUsers: [...users],
-  updatedUserDetails: userStore,
-  new_userId:socket.id
-});
-
-
-  socket.emit('room-info', {
-      existingUsers: [...users],
-      existingUserDetails: userStore
-    });
-  
-
-
-    // Send room info to the joining user
-    
-    
+  socket.on('join-room', (roomId, participantId, fullName, socketId) => {
+    addParticipant(roomId, participantId, fullName, socketId);
+    console.log("User joined room:", roomId, "Participant ID:", participantId, "Full Name:", fullName, "Socket ID:", socketId);
   });
 
 // ok
 socket.on('disconnecting', () => {
   // Notify each room that this user is leaving
-  for (const roomId of socket.rooms) {
-    if (roomId !== socket.id) { // Exclude the socket’s own room
+
+  
       socket.to(roomId).emit('user-disconnected', {
-        userId: socket.id,
-        name: userStore[socket.id]?.name || 'Unknown user'
+     
       });
 
-      if (roomUsers.has(roomId)) {
-        const users = roomUsers.get(roomId);
-        users.delete(socket.id);
-        if (users.size === 0) {
-          roomUsers.delete(roomId);
-        }
-      }
-    }
-  }
-
-  delete userStore[socket.id];
-  console.log('User disconnected:', socket.id);
+    
+  
 });
 
  
-  //   socket.on("send-chat", ({msg , roomId }) => {
-    
-    
-
-
-  //   if (!meetingChats.has(roomId)) {
-  //     meetingChats.set(roomId, []);
-  //   }
-
-
-  //   meetingChats.get(roomId).push(msg);
-  //   // console.log("Chat messages in room:", roomId);
-  //   // console.log(meetingChats.get(roomId));
-  //   AllroomUsers.forEach((userId) => {
-  //     socket.to(userId).emit('receive-chat', { msg: msg });
-  //   });
-
-
-  // });
-
-
 
 
 
