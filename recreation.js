@@ -31,6 +31,7 @@ function addParticipant(roomId, participantId, fullName, socketId){
 }
 function removeParticipant(roomId, participantId){
     const Participants= rooms.get(roomId);
+    console.log(Participants)
     if(Participants.has(participantId)){
         Participants.delete(participantId);
         rooms.set(roomId, Participants);
