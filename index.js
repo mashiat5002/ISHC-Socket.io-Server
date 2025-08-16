@@ -60,8 +60,8 @@ io.on('connection', (socket) => {
     console.log("token:", token);
     const decryptedData= await decrypt(token);
     console.log("decryptedData:", decryptedData);
-    // const { roomId, participantId, fullName, socketId } = token;
-    // addParticipant(roomId, participantId, fullName, socketId);
+    const { meeting_id, id, full_name} = decryptedData;
+    addParticipant(meeting_id, id, full_name, socket.id);
   });
 
 // ok
