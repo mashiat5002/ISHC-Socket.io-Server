@@ -80,7 +80,7 @@ export function handleVideoParticipant(participantId){
 export function getOtherParticipants(meeting_id,id) {
     return Array.from(rooms.get(meeting_id) || []).filter(participantId => participantId !== id);
 }
-export function getSocketIdUsingUid(meeting_id,uid) {
+export function getSocketIdUsingUid(uid) {
     const user = allUsers.get(uid);
     return user ? user.socketId : null;
 }
