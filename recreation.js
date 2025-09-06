@@ -1,17 +1,17 @@
 const rooms = new Map();
 const allUsers = new Map();
-function createRoom(roomId){
+export function createRoom(roomId){
     if(!rooms.has(roomId)){ //later ,also check if roomId exists and status is ongoing
         rooms.set(roomId, new Set());
     }
 }
-function endRoom(roomId){
+export function endRoom(roomId){
     if(rooms.has(roomId)){ 
         // change the roomId status to ended
         rooms.delete(roomId);
     }
 }
-function addParticipant(roomId, participantId, fullName, socketId){
+export function addParticipant(roomId, participantId, fullName, socketId){
     createRoom(roomId); // Create room if it doesn't exist
     const Participants= rooms.get(roomId);
     if(!Participants.has(participantId)){
@@ -30,14 +30,16 @@ function addParticipant(roomId, participantId, fullName, socketId){
     else{
         // Update socketId if participant already exists
         const user = allUsers.get(participantId);
+        console.log(user)
+        console.log(socketId)
         user.socketId = socketId;
         allUsers.set(participantId, user);
     }
-    console.log("after adding participant:");
+        // console.log("after adding participant:");
         console.log("rooms:", (rooms));
-    console.log("allUsers:", (allUsers));
+        // console.log("allUsers:", (allUsers));
 }
-function removeParticipant(socketId){
+export function removeParticipant(socketId){
     for (const [roomId, participants] of rooms.entries()) {
         for (const participantId of participants) {
             const user = allUsers.get(participantId);
@@ -45,17 +47,20 @@ function removeParticipant(socketId){
                 participants.delete(participantId); // Remove participant from the room
                 allUsers.delete(participantId); // Remove participant from allUsers map
                 rooms.set(roomId, participants); // Update the room with the modified participants set
+                rooms.forEach((room)=>{
+                    if(room.size === 0){
+                        rooms.delete(roomId);
+                    }
+                })
+                console.log("after disconnection ,rooms:", (rooms));
                 return; // Exit after removing the participant
             }
         }
     }
-        console.log("after removing participant:");
-        console.log("rooms:", (rooms));
-    console.log("allUsers:", (allUsers));
     
 }
 
-function handleAudioParticipant(participantId){
+export function handleAudioParticipant(participantId){
     const user= allUsers.get(participantId);
     if(user){
         user.isMute = !user.isMute; // Toggle mute status
@@ -63,7 +68,7 @@ function handleAudioParticipant(participantId){
         return user;
     }
 }
-function handleVideoParticipant(participantId){
+export function handleVideoParticipant(participantId){
     const user= allUsers.get(participantId);
     if(user){
         user.isVideoOn = !user.isVideoOn; // Toggle video status
@@ -72,13 +77,14 @@ function handleVideoParticipant(participantId){
     }
 }
 
+export function getOtherParticipants(meeting_id,id) {
+    return Array.from(rooms.get(meeting_id) || []).filter(participantId => participantId !== id);
+}
+export function getSocketIdUsingUid(meeting_id,uid) {
+    const user = allUsers.get(uid);
+    return user ? user.socketId : null;
+}
 
 
-module.exports = {
-  createRoom,
-  endRoom,
-  addParticipant,
-  removeParticipant,
-  handleAudioParticipant,
-  handleVideoParticipant
-};
+
+

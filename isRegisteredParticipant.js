@@ -1,5 +1,5 @@
-const { connectToDatabase } = require("./connect_mongodb/connect_mongodb");
-const ScheduledSeminars = require("./models/scheduled_seminars");
+import { connectToDatabase } from "./connect_mongodb/connect_mongodb";
+import ScheduledSeminars from "./models/scheduled_seminars";
  async function isRegisteredParticipant(seminarId, email) {
 
   await connectToDatabase()
@@ -13,4 +13,4 @@ const ScheduledSeminars = require("./models/scheduled_seminars");
   return true;
 }
 
-module.exports = isRegisteredParticipant;
+export default isRegisteredParticipant;

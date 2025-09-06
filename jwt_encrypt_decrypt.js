@@ -1,7 +1,9 @@
-const {jwtVerify, SignJWT} = require('jose');
+
+import { jwtVerify, SignJWT } from "jose";
+
 const key="secret";
 const secret_key= new TextEncoder().encode(key);
- const encrypt= (payload)=>{
+export const encrypt= (payload)=>{
     return new SignJWT(payload)
     .setProtectedHeader({alg:"HS256"})
     .setIssuedAt()
@@ -11,14 +13,10 @@ const secret_key= new TextEncoder().encode(key);
 }
 
 
- async function decrypt(input){
+export async function decrypt(input){
     const  {payload} = await jwtVerify(input, secret_key, {
         algorithms:['HS256']
     })
 
     return payload;
 }
-module.exports = {
-    encrypt,
-    decrypt
-};

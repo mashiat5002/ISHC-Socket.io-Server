@@ -1,9 +1,14 @@
-const { encrypt, decrypt } = require('./jwt_encrypt_decrypt.js');
-const {addParticipant, removeParticipant}= require('./recreation.js');
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
+
+
+import { encrypt, decrypt } from "./jwt_encrypt_decrypt.js";
+import { addParticipant, removeParticipant,getOtherParticipants, getSocketIdUsingUid } from "./recreation.js";
+import  express  from "express";
+import http from "http";
+import {Server} from "socket.io";
+import cors from "cors";
+
+
+
 
 
 
@@ -46,22 +51,34 @@ app.post("/emit", (req, res) => {
 
 const meetingChats = new Map(); // roomId => Array of chat messages
 io.on('connection', (socket) => {  
+
   console.log('A user connected:', socket.id);
+
   socket.on('join-room', async(token) => {
     const decryptedData= await decrypt(token);
     const { meeting_id, id, full_name} = decryptedData;
+    socket.join(meeting_id);
     addParticipant(meeting_id, id, full_name, socket.id);
+
+
+  socket.emit('room-info', {
+   existingParticipants: getOtherParticipants(meeting_id,id),
+   socketId: socket.id,
+   userId: id,
+   full_name: full_name
   });
 
+  
+ });
 
-socket.on('disconnecting', (socket) => {
-  removeParticipant(socket.id)
+socket.on('disconnecting', () => {
+  console.log("User disconnecting:", socket.id);
+  removeParticipant(socket.id);
   // Notify each room that this user is leaving
       // socket.to(roomId).emit('user-disconnected', {
       // });
 });
 
- 
 
 
 
@@ -72,27 +89,36 @@ socket.on('disconnecting', (socket) => {
 
 
 
-  // WebRTC signaling events (broadcast to room except sender)
-  socket.on('webrtc-offer', ({ to, from, offer }) => {
-    console.log(`WebRTC offer from ${from} to ${to}:`);
-    socket.to(to).emit('webrtc-offer', { from: from, offer });
-  });
 
+// WebRTC signaling events
+socket.on('webrtc-offer', ({ to, from, offer }) => {
+  console.log(`WebRTC offer from ${from} to ${to}`);
+  const targetSocketId = getSocketIdUsingUid(to);
+  if (targetSocketId) {
+    socket.to(targetSocketId).emit('webrtc-offer', { from, offer }); // keep `from` as userId
+  }
+});
 
-  socket.on('webrtc-answer', ({ to, answer, from }) => {
-    console.log(`WebRTC answer from ${from} to ${to}:`);
-    socket.to(to).emit('webrtc-answer', { from: from, answer });
-  });
+socket.on('webrtc-answer', ({ to, from, answer }) => {
+  console.log(`WebRTC answer from ${from} to ${to}`);
+  const targetSocketId = getSocketIdUsingUid(to);
+  if (targetSocketId) {
+    socket.to(targetSocketId).emit('webrtc-answer', { from, answer }); // keep `from` as userId
+  }
+});
 
+socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
+  console.log(`WebRTC ICE candidate from ${from} to ${to}`);
+  const targetSocketId = getSocketIdUsingUid(to);
+  if (targetSocketId) {
+    socket.to(targetSocketId).emit('webrtc-ice-candidate', { from, candidate }); // keep `from` as userId
+  }
+});
 
-  socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
-    console.log(`WebRTC ICE candidate from ${from} to ${to}:`);
-    socket.to(to).emit('webrtc-ice-candidate', { from: from, candidate });
-  });
 });
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
