@@ -94,6 +94,7 @@ socket.on('disconnecting', () => {
 socket.on('webrtc-offer', ({ to, from, offer }) => {
   console.log(`WebRTC offer from ${from} to ${to}`);
   const targetSocketId = getSocketIdUsingUid(to);
+  console.log(`WebRTC offer from ${from} to targetSocketId ${targetSocketId}`);
   if (targetSocketId) {
     socket.to(targetSocketId).emit('webrtc-offer', { from, offer }); // keep `from` as userId
   }
