@@ -77,9 +77,27 @@ export function handleVideoParticipant(participantId){
     }
 }
 
-export function getOtherParticipants(meeting_id,id) {
-    return Array.from(rooms.get(meeting_id) || []).filter(participantId => participantId !== id);
+export function getOtherParticipants(meeting_id, id) {
+    const others = [];
+
+    // Get all users in this room except the current one
+    const roomUsers = Array.from(rooms.get(meeting_id) || []).filter(
+        participantId => participantId !== id
+    );
+
+    // Loop through allUsers (Map)
+    for (const [key, value] of allUsers) {
+        if (!roomUsers.includes(key)) continue;
+
+        // Add both id (key) and full user info
+        others.push({ id: key, ...value });
+    }
+
+    return others;
 }
+
+
+
 export function getSocketIdUsingUid(uid) {
     const user = allUsers.get(uid);
     return user ? user.socketId : null;

@@ -7,21 +7,12 @@ import http from "http";
 import {Server} from "socket.io";
 import cors from "cors";
 
-
-
-
-
-
 const app = express();
 const server = http.createServer(app);
 
 
 app.use(cors());
 app.use(express.json()); 
-
-
-
-
 
 const io = new Server(server, {
   cors: {
@@ -37,7 +28,7 @@ app.get('/', (req, res) => {
 
 
 app.post("/emit", (req, res) => {
-  console.log("Received emit request:", req.body);
+  // console.log("Received emit request:", req.body);
   const { roomId, detailed_Message } = req.body;
    if (!meetingChats.has(roomId)) {
       meetingChats.set(roomId, []);
@@ -72,7 +63,7 @@ io.on('connection', (socket) => {
  });
 
 socket.on('disconnecting', () => {
-  console.log("User disconnecting:", socket.id);
+  // console.log("User disconnecting:", socket.id);
   removeParticipant(socket.id);
   // Notify each room that this user is leaving
       // socket.to(roomId).emit('user-disconnected', {
@@ -93,11 +84,7 @@ socket.on('disconnecting', () => {
 // WebRTC signaling events
 socket.on('webrtc-offer', ({ to, from, offer }) => {
   console.log(`WebRTC offer from ${from} to ${to}`);
-  const targetSocketId = getSocketIdUsingUid(to);
-  console.log(`WebRTC offer from ${from} to targetSocketId ${targetSocketId}`);
-  if (targetSocketId) {
-    socket.to(targetSocketId).emit('webrtc-offer', { from, offer }); // keep `from` as userId
-  }
+    socket.emit('webrtc-offer', { from, offer }); // keep `from` as userId
 });
 
 socket.on('webrtc-answer', ({ to, from, answer }) => {
