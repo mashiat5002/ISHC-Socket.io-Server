@@ -84,7 +84,7 @@ socket.on('disconnecting', () => {
 // WebRTC signaling events
 socket.on('webrtc-offer', ({ to, from, offer }) => {
   console.log(`WebRTC offer from ${from} to ${to}`);
-    socket.emit('webrtc-offer', { from, offer }); // keep `from` as userId
+    socket.to(targetSocketId).emit('webrtc-offer', { from, offer }); // keep `from` as userId
 });
 
 socket.on('webrtc-answer', ({ to, from, answer }) => {
@@ -106,11 +106,11 @@ socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
 });
 
 
-const PORT = process.env.PORT || 3001;
-
-server.listen(PORT, 'localhost', () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+const PORT = process.env.PORT || 10000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server listening on http://0.0.0.0:${PORT}`);
 });
+
 
 
 
