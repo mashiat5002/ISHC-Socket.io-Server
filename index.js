@@ -107,8 +107,10 @@ socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
 
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+
+server.listen(PORT, 'localhost', () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
 });
+
 
 
