@@ -1,7 +1,7 @@
 
 
 import { encrypt, decrypt } from "./jwt_encrypt_decrypt.js";
-import { addParticipant, removeParticipant,getOtherParticipants, getSocketIdUsingUid } from "./recreation.js";
+import { addParticipant, removeParticipant,getOtherParticipants, getSocketIdUsingUid, handleToggleAudioParticipant, handleToggleVideoParticipant, getUserInfoFromRoom } from "./recreation.js";
 import  express  from "express";
 import http from "http";
 import {Server} from "socket.io";
@@ -78,11 +78,24 @@ socket.on('disconnecting', () => {
 
 
 
+socket.on('audio_video_status_update', async(details) => {
+  if(details.changeType=="audio")
+    await handleToggleAudioParticipant(details.userId);
+  else if(details.changeType=="video")
+    await handleToggleVideoParticipant(details.userId);
+
+  const updatedInfo= await getUserInfoFromRoom(details.room_id,details.userId);
+  console.log("cllaed","audio_video_status_update",updatedInfo)
+      io.to(details.room_id).emit("audio_video_status_update", {info:updatedInfo,id:details.userId});
+});
+
+
 
 
 
 // WebRTC signaling events
 socket.on('webrtc-offer', ({ to, from, offer }) => {
+  const targetSocketId = getSocketIdUsingUid(to);
   console.log(`WebRTC offer from ${from} to ${to}`);
     socket.to(targetSocketId).emit('webrtc-offer', { from, offer }); // keep `from` as userId
 });
@@ -90,10 +103,13 @@ socket.on('webrtc-offer', ({ to, from, offer }) => {
 socket.on('webrtc-answer', ({ to, from, answer }) => {
   console.log(`WebRTC answer from ${from} to ${to}`);
   const targetSocketId = getSocketIdUsingUid(to);
+
   if (targetSocketId) {
     socket.to(targetSocketId).emit('webrtc-answer', { from, answer }); // keep `from` as userId
   }
 });
+
+
 
 socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
   console.log(`WebRTC ICE candidate from ${from} to ${to}`);
@@ -106,7 +122,7 @@ socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
 });
 
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on http://0.0.0.0:${PORT}`);
 });

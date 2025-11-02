@@ -21,7 +21,7 @@ export function addParticipant(roomId, participantId, fullName, socketId){
             socketId:socketId,
             fullName: fullName, 
             isMute:false, 
-            isVideoOn:true
+            isVideoOff:false
         });
         Participants.add(participantId);
         rooms.set(roomId, Participants);
@@ -60,7 +60,8 @@ export function removeParticipant(socketId){
     
 }
 
-export function handleAudioParticipant(participantId){
+
+export function handleToggleAudioParticipant(participantId){
     const user= allUsers.get(participantId);
     if(user){
         user.isMute = !user.isMute; // Toggle mute status
@@ -68,10 +69,10 @@ export function handleAudioParticipant(participantId){
         return user;
     }
 }
-export function handleVideoParticipant(participantId){
+export function handleToggleVideoParticipant(participantId){
     const user= allUsers.get(participantId);
     if(user){
-        user.isVideoOn = !user.isVideoOn; // Toggle video status
+        user.isVideoOff = !user.isVideoOff; // Toggle video status
         allUsers.set(participantId, user);
         return user;
     }
@@ -104,5 +105,31 @@ export function getSocketIdUsingUid(uid) {
 }
 
 
+// get specific user information from specific room
+export function getUserInfoFromRoom(roomId, participantId) {
+  // Check if the room exists
+  if (!rooms.has(roomId)) {
+    console.warn(`Room ${roomId} not found.`);
+    return null;
+  }
+
+  const participants = rooms.get(roomId);
+
+  // Check if the user exists in this room
+  if (!participants.has(participantId)) {
+    console.warn(`User ${participantId} not found in room ${roomId}.`);
+    return null;
+  }
+
+  // Retrieve full user info from allUsers
+  const userInfo = allUsers.get(participantId);
+
+  if (!userInfo) {
+    console.warn(`User ${participantId} info not found in allUsers map.`);
+    return null;
+  }
+
+  return userInfo; // return the user details object
+}
 
 
