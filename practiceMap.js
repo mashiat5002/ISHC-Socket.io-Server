@@ -8,3 +8,4 @@ practiceMap.set("kiwi", { quantity: 6, price: 1.5 });
 practiceMap.delete("banana"); // Remove banana from the map
 console.log(practiceMap)
 
+

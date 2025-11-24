@@ -1,111 +1,221 @@
+// room-manager.ts
+// Keeps the same external API as your original file but supports room-specific user details.
+
+// rooms: Map<roomId, Set<participantId>>
 const rooms = new Map();
+// allUsers: Map<participantId, Map<roomId, userDetails>>
 const allUsers = new Map();
-export function createRoom(roomId){
-    if(!rooms.has(roomId)){ //later ,also check if roomId exists and status is ongoing
-        rooms.set(roomId, new Set());
-    }
+
+const roomChats = new Map();
+/**
+ * userDetails shape:
+ * {
+ *   roomId: string,
+ *   socketId: string,
+ *   fullName: string,
+ *   isAudioOff: boolean,
+ *   isVideoOff: boolean
+ * }
+ */
+
+/* Create a room (if not exists) */
+export function createRoom(roomId) {
+  if (!rooms.has(roomId)) {
+    rooms.set(roomId, new Set());
+  }
 }
-export function endRoom(roomId){
-    if(rooms.has(roomId)){ 
-        // change the roomId status to ended
-        rooms.delete(roomId);
-    }
-}
-export function addParticipant(roomId, participantId, fullName, socketId){
-    createRoom(roomId); // Create room if it doesn't exist
-    const Participants= rooms.get(roomId);
-    if(!Participants.has(participantId)){
-        allUsers.set(participantId, 
-        {
-            roomId: roomId, 
-            socketId:socketId,
-            fullName: fullName, 
-            isMute:false, 
-            isVideoOff:false
-        });
-        Participants.add(participantId);
-        rooms.set(roomId, Participants);
-        
-    }
-    else{
-        // Update socketId if participant already exists
-        const user = allUsers.get(participantId);
-        console.log(user)
-        console.log(socketId)
-        user.socketId = socketId;
-        allUsers.set(participantId, user);
-    }
-        // console.log("after adding participant:");
-        console.log("rooms:", (rooms));
-        // console.log("allUsers:", (allUsers));
-}
-export function removeParticipant(socketId){
-    for (const [roomId, participants] of rooms.entries()) {
-        for (const participantId of participants) {
-            const user = allUsers.get(participantId);
-            if (user && user.socketId === socketId) {
-                participants.delete(participantId); // Remove participant from the room
-                allUsers.delete(participantId); // Remove participant from allUsers map
-                rooms.set(roomId, participants); // Update the room with the modified participants set
-                rooms.forEach((room)=>{
-                    if(room.size === 0){
-                        rooms.delete(roomId);
-                    }
-                })
-                console.log("after disconnection ,rooms:", (rooms));
-                return; // Exit after removing the participant
-            }
+
+/* End/Delete a room */
+export function endRoom(roomId) {
+  if (rooms.has(roomId)) {
+    // remove all room-specific user entries from allUsers
+    const participants = rooms.get(roomId);
+    for (const pid of participants) {
+      const perUserMap = allUsers.get(pid);
+      if (perUserMap) {
+        perUserMap.delete(roomId);
+        if (perUserMap.size === 0) {
+          allUsers.delete(pid);
+        } else {
+          allUsers.set(pid, perUserMap);
         }
+      }
     }
-    
+    rooms.delete(roomId);
+  }
 }
 
+/* Add or update a participant for a specific room (room-scoped details).
+   Keeps the same signature as before.
+*/
+export function addParticipant(
+  roomId,
+  participantId,
+  fullName,
+  socketId,
+  onToggleSelfVideo,
+  onToggleSelfAudio
+) {
+    console.log("onToggleSelfAudio,onToggleSelfVideo") 
+    console.log(onToggleSelfAudio,onToggleSelfVideo)
+  createRoom(roomId); // Create room if it doesn't exist
+  const participants = rooms.get(roomId);
 
-export function handleToggleAudioParticipant(participantId){
-    const user= allUsers.get(participantId);
-    if(user){
-        user.isMute = !user.isMute; // Toggle mute status
-        allUsers.set(participantId, user);
-        return user;
-    }
-}
-export function handleToggleVideoParticipant(participantId){
-    const user= allUsers.get(participantId);
-    if(user){
-        user.isVideoOff = !user.isVideoOff; // Toggle video status
-        allUsers.set(participantId, user);
-        return user;
-    }
+
+  // ensure per-user map exists
+  if (!allUsers.has(participantId)) {
+    allUsers.set(participantId, new Map());
+  }
+  const perUserMap = allUsers.get(participantId);
+
+  // compute booleans based on passed strings (same interpretation as original)
+  // Note: keep the same mapping you had earlier if you want parity:
+  // original used onToggleSelfVideo -> isAudioOff and onToggleSelfAudio -> isVideoOff (seemed swapped)
+  // Here we assume the intended mapping: onToggleSelfAudio -> isAudioOff, onToggleSelfVideo -> isVideoOff
+  // If you want exact previous bug parity, swap them back.      
+const isAudioOff = onToggleSelfAudio ?? false;
+const isVideoOff = onToggleSelfVideo ?? false;
+
+ console.log("created with:", isAudioOff, isVideoOff)
+  const userDetails = {
+    roomId,
+    socketId,
+    fullName,
+    isAudioOff,
+    isVideoOff,
+  };
+
+  // set/update user details for this room
+  perUserMap.set(roomId, userDetails);
+  allUsers.set(participantId, perUserMap);
+
+  // add participant id to room set
+  participants.add(participantId);
+  rooms.set(roomId, participants);
+
+  console.log("rooms:", rooms);
+  // Note: allUsers structure will show per-room maps for each participant
 }
 
+/* Remove participant from a specific room by socketId (keeps same behavior) */
+export function removeParticipantFromRoom(roomId, socketId) {
+  const participants = rooms.get(roomId);
+  if (!participants) return null; // no room found
+
+  let removedParticipantId = null;
+
+  // Find matching participantId by socketId within that room
+  for (const participantId of Array.from(participants)) {
+    const perUserMap = allUsers.get(participantId);
+    if (!perUserMap) continue;
+    const userInfo = perUserMap.get(roomId);
+    if (userInfo && userInfo.socketId === socketId) {
+      // remove participant from room set
+      participants.delete(participantId);
+
+      // remove room entry from allUsers map for this participant
+      perUserMap.delete(roomId);
+      if (perUserMap.size === 0) {
+        allUsers.delete(participantId);
+      } else {
+        allUsers.set(participantId, perUserMap);
+      }
+
+      removedParticipantId = participantId;
+      break;
+    }
+  }
+
+  // Delete the room if empty
+  if (participants.size === 0) {
+    rooms.delete(roomId);
+  } else {
+    rooms.set(roomId, participants);
+  }
+
+  return removedParticipantId;
+}
+
+/* Toggle audio for participant but only for the specified room */
+export function handleToggleAudioParticipant(roomId, participantId) {
+  console.log("Audio toggle requested:");
+
+  // room must exist
+  if (!rooms.has(roomId)) return null;
+  const participants = rooms.get(roomId);
+
+  // participant must exist in this room
+  if (!participants.has(participantId)) return null;
+
+  const perUserMap = allUsers.get(participantId);
+  if (!perUserMap) return null;
+
+  const user = perUserMap.get(roomId);
+  if (!user) return null;
+
+  user.isAudioOff = !user.isAudioOff;
+  perUserMap.set(roomId, user);
+  allUsers.set(participantId, perUserMap);
+
+  return user;
+}
+
+/* Toggle video for participant but only for the specified room */
+export function handleToggleVideoParticipant(roomId, participantId) {
+  console.log("Video toggle requested:");
+
+  // room must exist
+  if (!rooms.has(roomId)) return null;
+  const participants = rooms.get(roomId);
+
+  // participant must exist in this room
+  if (!participants.has(participantId)) return null;
+
+  const perUserMap = allUsers.get(participantId);
+  if (!perUserMap) return null;
+
+  const user = perUserMap.get(roomId);
+  if (!user) return null;
+
+  user.isVideoOff = !user.isVideoOff;
+  perUserMap.set(roomId, user);
+  allUsers.set(participantId, perUserMap);
+
+  return user;
+}
+
+/* Get other participants in a room except the given id */
 export function getOtherParticipants(meeting_id, id) {
-    const others = [];
+  const others = [];
 
-    // Get all users in this room except the current one
-    const roomUsers = Array.from(rooms.get(meeting_id) || []).filter(
-        participantId => participantId !== id
-    );
+  const roomSet = rooms.get(meeting_id) || new Set();
+  const roomUsers = Array.from(roomSet).filter((participantId) => participantId !== id);
 
-    // Loop through allUsers (Map)
-    for (const [key, value] of allUsers) {
-        if (!roomUsers.includes(key)) continue;
+  // gather per-room user info from allUsers
+  for (const participantId of roomUsers) {
+    const perUserMap = allUsers.get(participantId);
+    if (!perUserMap) continue;
+    const userInfo = perUserMap.get(meeting_id);
+    if (!userInfo) continue;
+    others.push({ id: participantId, ...userInfo });
+  }
 
-        // Add both id (key) and full user info
-        others.push({ id: key, ...value });
-    }
-
-    return others;
+  return others;
 }
 
-
-
+/* Get socketId using uid (returns socketId from any room entry if multiple) */
 export function getSocketIdUsingUid(uid) {
-    const user = allUsers.get(uid);
-    return user ? user.socketId : null;
+  const perUserMap = allUsers.get(uid);
+  if (!perUserMap) return null;
+
+  // return socketId from first room entry (consistent with previous single-entry approach)
+  for (const [, userInfo] of perUserMap.entries()) {
+    if (userInfo && userInfo.socketId) return userInfo.socketId;
+  }
+  return null;
 }
 
-
-// get specific user information from specific room
+/* Get specific user information from specific room */
 export function getUserInfoFromRoom(roomId, participantId) {
   // Check if the room exists
   if (!rooms.has(roomId)) {
@@ -121,11 +231,16 @@ export function getUserInfoFromRoom(roomId, participantId) {
     return null;
   }
 
-  // Retrieve full user info from allUsers
-  const userInfo = allUsers.get(participantId);
-
-  if (!userInfo) {
+  // Retrieve per-room user info from allUsers
+  const perUserMap = allUsers.get(participantId);
+  if (!perUserMap) {
     console.warn(`User ${participantId} info not found in allUsers map.`);
+    return null;
+  }
+
+  const userInfo = perUserMap.get(roomId);
+  if (!userInfo) {
+    console.warn(`User ${participantId} has no entry for room ${roomId}.`);
     return null;
   }
 
@@ -133,3 +248,34 @@ export function getUserInfoFromRoom(roomId, participantId) {
 }
 
 
+function ensureChatRoom(roomId) {
+  if (!roomChats.has(roomId)) {
+    roomChats.set(roomId, []);
+  }
+}
+
+
+/** Add chat message to room */
+export function addChat(roomId, full_name, text) {
+  createRoom(roomId);
+  ensureChatRoom(roomId);
+
+  const chatEntry = {
+    full_name,
+    text,
+    time: new Date().toISOString(),
+  };
+
+  roomChats.get(roomId).push(chatEntry);
+
+  return chatEntry;
+}
+
+
+
+
+/** Get entire chat history of a room */
+export function getChatStore(roomId) {
+  if (!roomChats.has(roomId)) return [];
+  return roomChats.get(roomId);
+}

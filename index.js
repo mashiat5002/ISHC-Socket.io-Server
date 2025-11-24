@@ -1,7 +1,7 @@
 
 
 import { encrypt, decrypt } from "./jwt_encrypt_decrypt.js";
-import { addParticipant, removeParticipant,getOtherParticipants, getSocketIdUsingUid, handleToggleAudioParticipant, handleToggleVideoParticipant, getUserInfoFromRoom } from "./recreation.js";
+import { addParticipant, removeParticipantFromRoom,getOtherParticipants, getSocketIdUsingUid, handleToggleAudioParticipant, handleToggleVideoParticipant, getUserInfoFromRoom, addChat, getChatStore } from "./recreation.js";
 import  express  from "express";
 import http from "http";
 import {Server} from "socket.io";
@@ -27,6 +27,7 @@ app.get('/', (req, res) => {
 });
 
 
+
 app.post("/emit", (req, res) => {
   // console.log("Received emit request:", req.body);
   const { roomId, detailed_Message } = req.body;
@@ -45,12 +46,13 @@ io.on('connection', (socket) => {
 
   console.log('A user connected:', socket.id);
 
-  socket.on('join-room', async(token) => {
-    const decryptedData= await decrypt(token);
+  socket.on('join-room', async({encodedTxt,onToggleSelfVideo,onToggleSelfAudio}) => {
+    console.log("encoooooooded",encodedTxt, onToggleSelfVideo,onToggleSelfAudio)
+    const decryptedData= await decrypt(encodedTxt);
     const { meeting_id, id, full_name} = decryptedData;
     socket.join(meeting_id);
-    addParticipant(meeting_id, id, full_name, socket.id);
-
+    addParticipant(meeting_id, id, full_name, socket.id, onToggleSelfVideo,onToggleSelfAudio);
+ 
 
   socket.emit('room-info', {
    existingParticipants: getOtherParticipants(meeting_id,id),
@@ -62,13 +64,39 @@ io.on('connection', (socket) => {
   
  });
 
-socket.on('disconnecting', () => {
-  // console.log("User disconnecting:", socket.id);
-  removeParticipant(socket.id);
-  // Notify each room that this user is leaving
-      // socket.to(roomId).emit('user-disconnected', {
-      // });
+socket.on("add-chat", async({encodedTxt,text}) => {
+      const decryptedData = await decrypt(encodedTxt);
+      const { meeting_id, full_name } = decryptedData;
+  console.log("meeting_id, full_name")
+  console.log(meeting_id, full_name, text)
+         const chatEntry=addChat(meeting_id,full_name,text);
+         io.to(meeting_id).emit("new-chat-added", chatEntry);
+
 });
+socket.on("get-all-chats", async({encodedTxt}) => {
+      const decryptedData = await decrypt(encodedTxt);
+      const { meeting_id } = decryptedData;
+
+         const chatStore= getChatStore(meeting_id)
+         console.log(chatStore)
+         io.to(meeting_id).emit("receive-all-chats", chatStore);
+
+});
+
+
+
+
+socket.on("disconnecting", () => {
+  for (const roomId of socket.rooms) {
+    if (roomId === socket.id) continue; // skip the socket's personal room
+
+    const removedId= removeParticipantFromRoom(roomId, socket.id);
+    console.log("removedId")
+    console.log(removedId)
+    socket.to(roomId).emit("user-disconnected", removedId);
+  }
+});
+
 
 
 
@@ -79,26 +107,39 @@ socket.on('disconnecting', () => {
 
 
 socket.on('audio_video_status_update', async(details) => {
+  console.log("audio request:")
+  console.log(details)
+  console.log("audio request:") 
+  const updatedInfo_= await getUserInfoFromRoom(details.room_id,details.userId);
+  console.log(updatedInfo_)
   if(details.changeType=="audio")
-    await handleToggleAudioParticipant(details.userId);
+    await handleToggleAudioParticipant(details.room_id,details.userId);
   else if(details.changeType=="video")
-    await handleToggleVideoParticipant(details.userId);
+    await handleToggleVideoParticipant(details.room_id,details.userId);
 
   const updatedInfo= await getUserInfoFromRoom(details.room_id,details.userId);
   console.log("cllaed","audio_video_status_update",updatedInfo)
-      io.to(details.room_id).emit("audio_video_status_update", {info:updatedInfo,id:details.userId});
+    io.to(details.room_id).emit("audio_video_status_update", {
+      info: updatedInfo,
+      id: details.userId
+    });
 });
+
+
+
+
 
 
 
 
 
 // WebRTC signaling events
-socket.on('webrtc-offer', ({ to, from, offer }) => {
+socket.on('webrtc-offer', ({ to, from, sourceUserName, offer,onToggleSelfVideo,onToggleSelfAudio }) => {
   const targetSocketId = getSocketIdUsingUid(to);
-  console.log(`WebRTC offer from ${from} to ${to}`);
-    socket.to(targetSocketId).emit('webrtc-offer', { from, offer }); // keep `from` as userId
+  console.log(`WebRTC offer from ${from} ${sourceUserName} to ${to}`);
+    socket.to(targetSocketId).emit('webrtc-offer', { from, sourceUserName, offer,onToggleSelfVideo,onToggleSelfAudio }); // keep `from` as userId
 });
+      
 
 socket.on('webrtc-answer', ({ to, from, answer }) => {
   console.log(`WebRTC answer from ${from} to ${to}`);
@@ -108,7 +149,6 @@ socket.on('webrtc-answer', ({ to, from, answer }) => {
     socket.to(targetSocketId).emit('webrtc-answer', { from, answer }); // keep `from` as userId
   }
 });
-
 
 
 socket.on('webrtc-ice-candidate', ({ to, from, candidate }) => {
