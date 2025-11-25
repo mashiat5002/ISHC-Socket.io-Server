@@ -86,6 +86,7 @@ socket.on("get-all-chats", async({encodedTxt}) => {
 
 
 
+
 socket.on("disconnecting", () => {
   for (const roomId of socket.rooms) {
     if (roomId === socket.id) continue; // skip the socket's personal room
